@@ -7,7 +7,8 @@ public class PlayerController : MonoBehaviour
     public static PlayerController instance;
 
     [Header("Movimiento")]
-    private bool canDoubleJump;
+    private int jumpCount; // Contador de saltos
+    private int maxJumpCount = 3; // Máximo número de saltos permitidos
     public float moveSpeed;
     public float jumpForce;
 
@@ -42,10 +43,8 @@ public class PlayerController : MonoBehaviour
             TheRB = GetComponent<Rigidbody2D>();
     }
 
-
     void Update()
     {
-
         if (knockBackCounter <= 0)
         {
             // Movimiento horizontal
@@ -54,30 +53,25 @@ public class PlayerController : MonoBehaviour
             // Verificar si está en el suelo
             isGrounded = Physics2D.OverlapCircle(groundCheckPoint.position, groundCheckRadius, whatIsGround);
 
-            // Resetear el doble salto cuando toca el suelo
+            // Resetear contador de saltos al tocar el suelo
             if (isGrounded)
             {
-                canDoubleJump = true;
+                jumpCount = 0;
             }
 
             // Lógica de salto
-            if (Input.GetButtonDown("Jump"))
+            if (Input.GetButtonDown("Jump") && jumpCount < maxJumpCount)
             {
-                if (isGrounded) // Primer salto
-                {
-                    TheRB.linearVelocity = new Vector2(TheRB.linearVelocity.x, jumpForce);
-                }
-                else if (canDoubleJump) // Doble salto
-                {
-                    TheRB.linearVelocity = new Vector2(TheRB.linearVelocity.x, jumpForce);
-                    canDoubleJump = false;
-                }
+                TheRB.linearVelocity = new Vector2(TheRB.linearVelocity.x, jumpForce);
+                jumpCount++; // Incrementar contador de saltos
             }
 
+            // Girar el sprite según la dirección del movimiento
             if (TheRB.linearVelocity.x < 0)
             {
                 TheSR.flipX = true;
-            } else if (TheRB.linearVelocity.x > 0)
+            }
+            else if (TheRB.linearVelocity.x > 0)
             {
                 TheSR.flipX = false;
             }
@@ -89,12 +83,14 @@ public class PlayerController : MonoBehaviour
             if (!TheSR.flipX)
             {
                 TheRB.linearVelocity = new Vector2(-knockBackForce, TheRB.linearVelocity.y);
-            } else
+            }
+            else
             {
                 TheRB.linearVelocity = new Vector2(knockBackForce, TheRB.linearVelocity.y);
             }
         }
 
+        // Actualizar animaciones
         anim.SetFloat("moveSpeed", Mathf.Abs(TheRB.linearVelocity.x));
         anim.SetBool("isGrounded", isGrounded);
     }

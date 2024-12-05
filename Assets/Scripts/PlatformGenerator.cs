@@ -26,7 +26,15 @@ public class PlatformGenerator : MonoBehaviour
 
     void Start()
     {
-        // Generar plataformas iniciales
+        // Generar una plataforma inicial en la posición del jugador
+        Vector3 initialPlatformPosition = new Vector3(playerTransform.position.x, playerTransform.position.y - platformHeight / 2, 0);
+        GameObject initialPlatform = Instantiate(platformPrefab, initialPlatformPosition, Quaternion.identity);
+        activePlatforms.Add(initialPlatform);
+
+        // Actualizar la última posición de plataforma generada
+        lastPlatformX = initialPlatformPosition.x;
+
+        // Generar plataformas iniciales en diferentes niveles
         for (int i = 0; i < 10; i++)
         {
             GeneratePlatform();
@@ -51,25 +59,33 @@ public class PlatformGenerator : MonoBehaviour
 
     void GeneratePlatform()
     {
-        // Calcular posición de la nueva plataforma
+        // Garantizar una separación mínima y máxima entre plataformas en Y
+        float minYOffset = 2.0f; // Separación mínima entre plataformas en Y
+        float maxYOffset = 4.0f; // Separación máxima entre plataformas en Y
+
+        // Determinar el nivel de la nueva plataforma: abajo, medio, o arriba
+        float[] levels = { minY, (minY + maxY) / 2, maxY }; // Niveles posibles
+        float levelY = levels[Random.Range(0, levels.Length)];
+
+        // Calcular la posición de la nueva plataforma
         Vector3 newPlatformPosition = new Vector3(
-            lastPlatformX + platformWidth, 
-            Random.Range(minY, maxY), 
+            lastPlatformX + platformWidth, // Posición X continua
+            levelY,                        // Posición Y definida por los niveles
             0
         );
 
-        // Crear plataforma
+        // Crear la nueva plataforma
         GameObject newPlatform = Instantiate(platformPrefab, newPlatformPosition, Quaternion.identity);
         activePlatforms.Add(newPlatform);
 
-        // Potencialmente añadir obstáculo
+        // Actualizar la posición de la última plataforma generada
+        lastPlatformX = newPlatformPosition.x;
+
+        // Generar obstáculo si corresponde
         if (Random.value < obstacleSpawnChance)
         {
             GenerateObstacle(newPlatform);
         }
-
-        // Actualizar última posición de plataforma
-        lastPlatformX = newPlatformPosition.x;
     }
 
     void GenerateObstacle(GameObject platform)
